@@ -4,9 +4,9 @@
 import csv
 import json
 import os
+import os.path
 import shutil
 import tempfile
-import os.path
 
 from cog import BasePredictor, Input, Path
 
@@ -20,7 +20,10 @@ class Predictor(BasePredictor):
     def predict(
         self,
         audio: Path = Input(description="Speech audio file"),
-        checkpoint: str = Input(description="Model checkpoint to use. EARS-WHAM speech enhancement or EARS-Reverb dereverberation.", option=["EARS-WHAM", "EARS-Reverb"]),
+        checkpoint: str = Input(
+            description="Model checkpoint to use. EARS-WHAM speech enhancement or EARS-Reverb dereverberation.",
+            option=["EARS-WHAM", "EARS-Reverb"],
+        ),
     ) -> Path:
 
         # Make a temporary directory
@@ -44,7 +47,12 @@ class Predictor(BasePredictor):
                 os.system(
                     f"cd /sgmse ; python3 enhancement.py --test_dir {temp_dir} --enhanced_dir {enhanced_dir} --ckpt {ckpt}"
                 )
-                files = [f for f in os.listdir(enhanced_dir) if os.path.isfile(os.path.join(enhanced_dir, f)) and f.endswith(".wav")]
+                files = [
+                    f
+                    for f in os.listdir(enhanced_dir)
+                    if os.path.isfile(os.path.join(enhanced_dir, f))
+                    and f.endswith(".wav")
+                ]
                 assert len(files) == 1
                 return files[0]
             except:
