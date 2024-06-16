@@ -50,7 +50,7 @@ class Predictor(BasePredictor):
                 # They don't resample for us :\
                 x, sr = torchaudio.load(audio)
                 if sr != 48000:
-                    x = torchaudio.transforms.Resampler(sr, 48000)(x)
+                    x = torchaudio.transforms.Resample(sr, 48000)(x)
                 torchaudio.save(audio_path, x, sr)
                 # print(f"Copying {audio} to {audio_path}")
                 # shutil.copy(audio, audio_path)
