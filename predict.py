@@ -8,6 +8,8 @@ import os.path
 import shutil
 import tempfile
 
+import torchaudio
+
 from cog import BasePredictor, Input, Path
 
 
@@ -22,7 +24,8 @@ class Predictor(BasePredictor):
         audio: Path = Input(description="Speech audio file"),
         checkpoint: str = Input(
             description="Model checkpoint to use. EARS-WHAM speech enhancement or EARS-Reverb dereverberation.",
-            option=["EARS-WHAM", "EARS-Reverb"],
+            choices=["EARS-WHAM", "EARS-Reverb"],
+            default="EARS-WHAM"
         ),
     ) -> Path:
 
@@ -30,9 +33,15 @@ class Predictor(BasePredictor):
         with tempfile.TemporaryDirectory() as temp_dir:
             try:
                 # Copy the audio to the temporary directory
-                audio_path = os.path.join(temp_dir, os.path.basename(audio))
-                print(f"Copying {audio} to {audio_path}")
-                shutil.copy(audio, audio_path)
+                audio_path = os.path.join(temp_dir, os.path.basename(audio) + ".wav")
+
+                # They don't resample for us :\
+                x, sr = torchaudio.load(audio)
+                if sr != 48000:
+                    x = torchaudio.transforms.Resampler(sr, 48000)(x)
+                torchaudio.save(audio_path, x, sr)
+                #print(f"Copying {audio} to {audio_path}")
+                #shutil.copy(audio, audio_path)
 
                 enhanced_dir = os.path.join(temp_dir, "enhanced")
                 os.mkdir(enhanced_dir)
@@ -54,7 +63,7 @@ class Predictor(BasePredictor):
                     and f.endswith(".wav")
                 ]
                 assert len(files) == 1
-                return files[0]
+                return Path(files[0])
             except:
                 raise
             finally:
